@@ -1,0 +1,27 @@
+{
+  "name": "democrattybot",
+  "version": "1.0.0",
+  "description": "A small attempt at creating a music bot for discord, or at least learn some things about JavaScript and creating bots. The name comes for the initial drive for creating this bot, if it ever comes that far it will be apparent.",
+  "main": "index.js",
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "ffmpeg": "^0.0.4",
+    "fluent-ffmpeg": "^2.1.2",
+    "node-opus": "^0.3.3",
+    "ytdl-core": "^4.5.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/torbjkri/DemocrattyBot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/torbjkri/DemocrattyBot/issues"
+  },
+  "homepage": "https://github.com/torbjkri/DemocrattyBot#readme"
+}

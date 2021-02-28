@@ -122,12 +122,37 @@ async function list(message, serverQueue) {
         if (!serverQueue)
             return message.channel.send("No current playlist for this channel");
 
-        listMessage = `# Title: \t\t\t\t\t Votes: \n`
-        for (i = 0; i < serverQueue.songs.length; i++) {
-            listMessage += `${serverQueue.songs[i].title} \t\t\t ${serverQueue.songs[i].votes} votes\n`;
+        serverQueue.songs.sort(function(a,b) {
+            return b.votes - a.votes;
+        })
+        message.channel.send(`Currently playing:\n ${serverQueue.songs[0].title}`);
+        if (serverQueue.songs.length > 1) {
+            listMessage = `# Title: \t\t\t\t\t Votes: \n`
+            for (i = 1; i < serverQueue.songs.length; i++) {
+                listMessage += `[${i}] \t${serverQueue.songs[i].title} \t\t\t ${serverQueue.songs[i].votes} votes\n`;
+            }
+            return message.channel.send(listMessage);
         }
-        return message.channel.send(listMessage);
-    
+        return 1;
+}
+
+function addVote(message, serverQueue) {
+    if (!serverQueue)
+        return message.channel.send("No current playlist for this channel");
+
+    if (!message.member.voice.channel)
+        return message.channel.send("You need to be in a voice channel with an active list to vote");
+
+    let voteNumber = parseInt(message.content.split(" ")[1]);
+    if (isNaN(voteNumber))
+        return message.channel.send("Wrong voting format, vote by writing \"!vote your_number\"")
+
+    if (voteNumber + 1 > serverQueue.songs.length || voteNumber < 1)
+        return message.channel.send("Not a valid song. Type !list to get list of available songs for voting");
+
+    serverQueue.songs[voteNumber].votes += 1;
+    message.channel.send("Vote registered. \n Updated list:");
+    list(message, serverQueue);
 }
 
 
@@ -146,7 +171,8 @@ module.exports = {
             return;
         } else if (message.content.startsWith(`${prefix}list`)) {
             list(message, serverQueue);
-            
+        } else if (message.content.startsWith(`${prefix}vote`)) {
+            addVote(message, serverQueue);
         } else {
             message.channel.send("You need to enter a valid command!");
         }

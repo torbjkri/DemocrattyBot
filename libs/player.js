@@ -28,8 +28,11 @@ async function execute(message, serverQueue) {
     const songInfo = await ytdl.getInfo(args[1]);
     const song = {
         title: songInfo.videoDetails.title,
-        url: songInfo.videoDetails.video_url
+        url: songInfo.videoDetails.video_url,
+        votes: 1,
+        addeded: Date.now()
     };
+
 
     if (!serverQueue) {
         const queueConstruct = {
@@ -38,7 +41,7 @@ async function execute(message, serverQueue) {
             connection: null,
             songs: [],
             volume: 5,
-            playing: true
+            playing: true,
         };
 
         queue.set(message.guild.id, queueConstruct);
@@ -94,6 +97,9 @@ function stop(message, serverQueue) {
 
 function play(message, song) {
     const serverQueue =  queue.get(message.guild.id);
+    serverQueue.songs.sort(function(a,b) {
+        return b.votes - a.votes;
+    })
     if (!song) {
         message.channel.send("My queue has endeded I'll leave you alone for now :)");
         queue.delete(message.guild.id);
@@ -112,10 +118,23 @@ function play(message, song) {
     serverQueue.textChannel.send(`Start playing **${song.title}**`);
 }
 
+async function list(message, serverQueue) {
+        if (!serverQueue)
+            return message.channel.send("No current playlist for this channel");
+
+        listMessage = `# Title: \t\t\t\t\t Votes: \n`
+        for (i = 0; i < serverQueue.songs.length; i++) {
+            listMessage += `${serverQueue.songs[i].title} \t\t\t ${serverQueue.songs[i].votes} votes\n`;
+        }
+        return message.channel.send(listMessage);
+    
+}
+
 
 module.exports = {
     run: function(message) {
         const serverQueue = queue.get(message.guild.id);
+
 
         if (message.content.startsWith(`${prefix}play`)) {
             execute(message, serverQueue);
@@ -125,6 +144,9 @@ module.exports = {
         } else if (message.content.startsWith(`${prefix}stop`)) {
             stop(message, serverQueue);
             return;
+        } else if (message.content.startsWith(`${prefix}list`)) {
+            list(message, serverQueue);
+            
         } else {
             message.channel.send("You need to enter a valid command!");
         }

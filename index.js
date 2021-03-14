@@ -27,6 +27,22 @@ client.on('message', async message => {
     if (message.author.bot) return;
     if (!message.content.startsWith(prefix)) return;
 
+    if (message.content.startsWith(`${prefix}play`)) {
+        player.execute(message);
+        return;
+    } else if (message.content.startsWith(`${prefix}skip`)) {
+        player.skip(message);
+    } else if (message.content.startsWith(`${prefix}stop`)) {
+        player.stop(message);
+        return;
+    } else if (message.content.startsWith(`${prefix}list`)) {
+        player.list(message);
+    } else if (message.content.startsWith(`${prefix}vote`)) {
+        player.addVote(message);
+    } else {
+        message.channel.send("You need to enter a valid command!");
+    }
+
     player.run(message);
 });
 

@@ -1,15 +1,10 @@
 const Discord = require('discord.js');
 const ytdl =  require('ytdl-core');
 
-const {
-    prefix,
-    token,
-} = require('../config.json');
-
 const queue  = new Map();
 
 
-async function execute(message, serverQueue) {
+async function execute(message) {
     const args = message.content.split(" ");
 
     const voiceChannel =  message.member.voice.channel;
@@ -33,6 +28,7 @@ async function execute(message, serverQueue) {
         addeded: Date.now()
     };
 
+    serverQueue = queue.get(message.guild.id);
 
     if (!serverQueue) {
         const queueConstruct = {
@@ -40,6 +36,7 @@ async function execute(message, serverQueue) {
             voiceChannel: voiceChannel,
             connection: null,
             songs: [],
+            currentlyPlaying: null,
             volume: 5,
             playing: true,
         };
@@ -50,7 +47,7 @@ async function execute(message, serverQueue) {
         try {
             let connection = await voiceChannel.join();
             queueConstruct.connection =  connection;
-            play(message, queueConstruct.songs[0]);
+            play(message);
         }
         catch (err) {
             console.log(err);
@@ -65,11 +62,13 @@ async function execute(message, serverQueue) {
     }
 }
 
-function skip(message, serverQueue) {
+function skip(message) {
     if (!message.member.voice.channel)
         return message.chnnael.send(
             "You have to be in a voice channel to skip song."
         );
+    
+    serverQueue = queue.get(message.guild.id);
 
     if (!serverQueue)
         return message.channel.send(
@@ -79,11 +78,12 @@ function skip(message, serverQueue) {
     serverQueue.connection.dispatcher.end();
 }
 
-function stop(message, serverQueue) {
+function stop(message) {
     if (!message.member.voice.channel)
         return message.channel.send(
             "You have to be in the voice channel to stop the music"
         );
+    serverQueue = queue.get(message.guild.id);
 
     if (!serverQueue)
         return message.channel.send(
@@ -95,50 +95,54 @@ function stop(message, serverQueue) {
     serverQueue.connection.dispatcher.end();
 }
 
-function play(message, song) {
+function play(message) {
     const serverQueue =  queue.get(message.guild.id);
-    serverQueue.songs.sort(function(a,b) {
-        return b.votes - a.votes;
-    })
-    if (!song) {
-        message.channel.send("My queue has endeded I'll leave you alone for now :)");
+    if (serverQueue.songs.length === 0) {
+        message.channel.send("My queue has ended -- I'll leave you alone for now :)");
         queue.delete(message.guild.id);
         return;
     }
 
+    serverQueue.songs.sort(function(a,b) {
+        return b.votes - a.votes;
+    })
+
+    serverQueue.currentlyPlaying = serverQueue.songs.shift();
+
     const dispatcher =  serverQueue.connection
-          .play(ytdl(song.url))
+          .play(ytdl(serverQueue.currentlyPlaying.url))
           .on("finish", () => {
-              serverQueue.songs.shift();
-              play(message, serverQueue.songs[0]);
+              play(message);
           })
           .on("error", error => console.error(error));
 
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-    serverQueue.textChannel.send(`Start playing **${song.title}**`);
+    serverQueue.textChannel.send(`Start playing **${serverQueue.currentlyPlaying.title}**`);
 }
 
 async function list(message, serverQueue) {
-        if (!serverQueue)
-            return message.channel.send("No current playlist for this channel");
-
-        serverQueue.songs.sort(function(a,b) {
-            return b.votes - a.votes;
-        })
-        message.channel.send(`Currently playing:\n ${serverQueue.songs[0].title}`);
-        if (serverQueue.songs.length > 1) {
-            listMessage = `# Title: \t\t\t\t\t Votes: \n`
-            for (i = 1; i < serverQueue.songs.length; i++) {
-                listMessage += `[${i}] \t${serverQueue.songs[i].title} \t\t\t ${serverQueue.songs[i].votes} votes\n`;
-            }
-            return message.channel.send(listMessage);
-        }
-        return 1;
-}
-
-function addVote(message, serverQueue) {
+    serverQueue = queue.get(message.guild.id);
     if (!serverQueue)
         return message.channel.send("No current playlist for this channel");
+
+    serverQueue.songs.sort(function(a,b) {
+        return b.votes - a.votes;
+    })
+    message.channel.send(`Currently playing:\n ${serverQueue.currentlyPlaying.title}`);
+    if (serverQueue.songs.length > 1) {
+        listMessage = `Playlist:\n # Title: \t\t\t\t\t Votes: \n`
+        for (i = 0; i < serverQueue.songs.length; i++) {
+            listMessage += `[${i}] \t${serverQueue.songs[i].title} \t\t\t ${serverQueue.songs[i].votes} votes\n`;
+        }
+        return message.channel.send(listMessage);
+    }
+    return 1;
+}
+
+function addVote(message) {
+    serverQueue = queue.get(message.guild.id);
+    if (!serverQueue)
+        return message.channel.send("There is no current playlist for this channel");
 
     if (!message.member.voice.channel)
         return message.channel.send("You need to be in a voice channel with an active list to vote");
@@ -157,24 +161,9 @@ function addVote(message, serverQueue) {
 
 
 module.exports = {
-    run: function(message) {
-        const serverQueue = queue.get(message.guild.id);
-
-
-        if (message.content.startsWith(`${prefix}play`)) {
-            execute(message, serverQueue);
-            return;
-        } else if (message.content.startsWith(`${prefix}skip`)) {
-            skip(message, serverQueue);
-        } else if (message.content.startsWith(`${prefix}stop`)) {
-            stop(message, serverQueue);
-            return;
-        } else if (message.content.startsWith(`${prefix}list`)) {
-            list(message, serverQueue);
-        } else if (message.content.startsWith(`${prefix}vote`)) {
-            addVote(message, serverQueue);
-        } else {
-            message.channel.send("You need to enter a valid command!");
-        }
-    }
+    execute: execute,
+    skip:       skip,
+    stop:       stop,
+    list:       list,
+    addVote:    addVote
 };

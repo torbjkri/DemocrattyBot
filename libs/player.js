@@ -97,23 +97,27 @@ function stop(message) {
 
 function play(message) {
     const serverQueue =  queue.get(message.guild.id);
+    console.log("We are in play!");
     if (serverQueue.songs.length === 0) {
         message.channel.send("My queue has ended -- I'll leave you alone for now :)");
+        serverQueue.voiceChannel.leave();
         queue.delete(message.guild.id);
         return;
     }
 
+
     serverQueue.songs.sort(function(a,b) {
         return b.votes - a.votes;
-    })
-
+    });
+    
     serverQueue.currentlyPlaying = serverQueue.songs.shift();
 
     const dispatcher =  serverQueue.connection
-          .play(ytdl(serverQueue.currentlyPlaying.url))
-          .on("finish", () => {
-              play(message);
-          })
+            .play(ytdl( serverQueue.currentlyPlaying.url))
+            .on("finish", () => {
+                console.log("We are in eventEmitter!");
+                play(message);
+            })
           .on("error", error => console.error(error));
 
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
@@ -129,7 +133,7 @@ async function list(message, serverQueue) {
         return b.votes - a.votes;
     })
     message.channel.send(`Currently playing:\n ${serverQueue.currentlyPlaying.title}`);
-    if (serverQueue.songs.length > 1) {
+    if (serverQueue.songs.length > 0) {
         listMessage = `Playlist:\n # Title: \t\t\t\t\t Votes: \n`
         for (i = 0; i < serverQueue.songs.length; i++) {
             listMessage += `[${i}] \t${serverQueue.songs[i].title} \t\t\t ${serverQueue.songs[i].votes} votes\n`;

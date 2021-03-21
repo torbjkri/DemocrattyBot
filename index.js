@@ -42,7 +42,5 @@ client.on('message', async message => {
     } else {
         message.channel.send("You need to enter a valid command!");
     }
-
-    player.run(message);
 });
 

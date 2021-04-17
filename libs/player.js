@@ -106,7 +106,6 @@ function play(guild, song) {
     const dispatcher =  serverQueue.connection
             .play(ytdl(song.url))
             .on("finish", () => {
-                console.log("We are in eventEmitter!");
                 serverQueue.songs.sort(function(a,b) {return b.votes - a.votes;});
                 serverQueue.currentlyPlaying = serverQueue.songs.shift();
                 play(guild, serverQueue.currentlyPlaying);

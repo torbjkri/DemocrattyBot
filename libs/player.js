@@ -42,12 +42,12 @@ async function execute(message) {
         };
 
         queue.set(message.guild.id, queueConstruct);
-        queueConstruct.songs.push(song);
 
         try {
             let connection = await voiceChannel.join();
             queueConstruct.connection =  connection;
-            play(message);
+            queueConstruct.currentlyPlaying = song;
+            play(message.guild, song);
         }
         catch (err) {
             console.log(err);
@@ -95,31 +95,27 @@ function stop(message) {
     serverQueue.connection.dispatcher.end();
 }
 
-function play(message) {
-    const serverQueue =  queue.get(message.guild.id);
-    console.log("We are in play!");
-    if (serverQueue.songs.length === 0) {
-        message.channel.send("My queue has ended -- I'll leave you alone for now :)");
+function play(guild, song) {
+    const serverQueue = queue.get(guild.id);
+    if (!song) {
         serverQueue.voiceChannel.leave();
-        queue.delete(message.guild.id);
+        queue.delete(guild.id);
         return;
     }
 
-
-    serverQueue.songs.sort(function(a,b) {
-        return b.votes - a.votes;
-    });
-    
-    serverQueue.currentlyPlaying = serverQueue.songs.shift();
-
     const dispatcher =  serverQueue.connection
-            .play(ytdl( serverQueue.currentlyPlaying.url))
+            .play(ytdl(song.url))
             .on("finish", () => {
                 console.log("We are in eventEmitter!");
-                play(message);
+                serverQueue.songs.sort(function(a,b) {return b.votes - a.votes;});
+                serverQueue.currentlyPlaying = serverQueue.songs.shift();
+                play(guild, serverQueue.currentlyPlaying);
             })
           .on("error", error => console.error(error));
 
+    if (serverQueue.currentlyPlaying === null) {
+        play(message);
+    }
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     serverQueue.textChannel.send(`Start playing **${serverQueue.currentlyPlaying.title}**`);
 }

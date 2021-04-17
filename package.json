@@ -4,10 +4,10 @@
   "description": "A small attempt at creating a music bot for discord, or at least learn some things about JavaScript and creating bots. The name comes for the initial drive for creating this bot, if it ever comes that far it will be apparent.",
   "main": "index.js",
   "dependencies": {
-    "discord.js": "^12.5.1",
+    "discord.js": "^12.5.3",
     "ffmpeg": "^0.0.4",
     "fluent-ffmpeg": "^2.1.2",
-    "mocha": "^8.3.0",
+    "mocha": "^8.3.2",
     "node-opus": "^0.3.3",
     "ytdl-core": "^4.5.0"
   },

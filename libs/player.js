@@ -63,17 +63,21 @@ async function execute(message) {
 }
 
 function skip(message) {
-    if (!message.member.voice.channel)
-        return message.chnnael.send(
+    if (!message.member.voice.channel) {
+        message.channel.send(
             "You have to be in a voice channel to skip song."
         );
-    
+        return "Fail voice";
+    }
+
     serverQueue = queue.get(message.guild.id);
 
-    if (!serverQueue)
-        return message.channel.send(
+    if (!serverQueue) {
+        message.channel.send(
             "There is no song to skip, it's in your head ;)"
         );
+        return "Fail queue"
+    }
 
     serverQueue.connection.dispatcher.end();
 }

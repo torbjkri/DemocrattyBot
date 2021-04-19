@@ -1,4 +1,4 @@
-const Discord = require('discord.js');
+//const Discord = require('discord.js');
 const ytdl =  require('ytdl-core');
 
 const queue  = new Map();
@@ -64,19 +64,17 @@ async function execute(message) {
 
 function skip(message) {
     if (!message.member.voice.channel) {
-        message.channel.send(
+        return message.channel.send(
             "You have to be in a voice channel to skip song."
-        );
-        return "Fail voice";
+        ).then(console.log("Message sendt")).catch(console.error);
     }
 
     serverQueue = queue.get(message.guild.id);
 
     if (!serverQueue) {
-        message.channel.send(
+        return message.channel.send(
             "There is no song to skip, it's in your head ;)"
-        );
-        return "Fail queue"
+        ).then(console.log("Message sent")).catch(console.error);
     }
 
     serverQueue.connection.dispatcher.end();

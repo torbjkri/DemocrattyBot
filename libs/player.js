@@ -125,7 +125,7 @@ function play(guild, song) {
     serverQueue.textChannel.send(`Start playing **${serverQueue.currentlyPlaying.title}**`);
 }
 
-async function list(message, serverQueue) {
+async function list(message) {
     serverQueue = queue.get(message.guild.id);
     if (!serverQueue)
         return message.channel.send("No current playlist for this channel");

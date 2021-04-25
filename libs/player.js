@@ -77,7 +77,11 @@ function skip(message) {
         ).then(console.log("Message sent")).catch(console.error);
     }
 
+
     serverQueue.connection.dispatcher.end();
+    return message.channel.send(
+        "Skipping current song"
+        ).then(console.log("Message sent")).catch(console.error);
 }
 
 function stop(message) {

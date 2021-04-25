@@ -8,7 +8,7 @@ function messageConstruct() {
             }
         },
         channel: {
-            send: function() {return Promise.resolve("OK")}
+            send: function(value) {return Promise.resolve(value);}
         },
         guild: {
             id: 1
@@ -23,7 +23,7 @@ beforeEach(function() {
 
 test("skip fail on no voice channel", function() {
     return player.skip(message).then(data => {
-        expect(data).toMatch("OK");
+        expect(data).toMatch("You have to be in a voice channel to skip song");
     });
 });
 
@@ -31,6 +31,6 @@ test("skip fail on no voice channel", function() {
 test('skip fail on no valid queue channel', function() {
     message.member.voice.channel = true;
     return player.skip(message).then(data => {
-        expect(data).toMatch("OK");
+        expect(data).toMatch("There is no song to skip, it's in your head ;)");
     });
 });

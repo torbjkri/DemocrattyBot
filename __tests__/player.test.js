@@ -1,4 +1,14 @@
 // test/player.js
+let ytdl = require('ytdl-core');
+
+jest.mock('ytdl-core');
+
+const ytdlGetInfoMock = jest.fn(
+    function()
+);
+
+const ytdlGetInfo = ytdl.getInfo;
+
 
 function messageConstruct() {
     return {
@@ -19,6 +29,7 @@ function messageConstruct() {
 beforeEach(function() {
     player = require('../libs/player');
     message = messageConstruct();
+    ytdlGetInfo.mockReset();
 });
 
 // skip
@@ -55,4 +66,9 @@ test("list fail on no connection", function() {
     return player.list(message).then(data => {
         expect(data).toMatch("No current playlist for this channel");
     });
+});
+
+test("successful add to playlist", function() {
+    
+
 });

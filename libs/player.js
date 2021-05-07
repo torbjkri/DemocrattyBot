@@ -10,7 +10,7 @@ async function execute(message) {
     const voiceChannel =  message.member.voice.channel;
     if (!voiceChannel)
         return message.channel.send(
-            "You need to be in a voice channel to play music!"
+            "You have to be in the voice channel to play music!"
         );
 
     const permissions =  voiceChannel.permissionsFor(message.client.user);
@@ -37,7 +37,7 @@ async function execute(message) {
             connection: null,
             songs: [],
             currentlyPlaying: null,
-            volume: 5,
+            volume: 4,
             playing: true,
         };
 

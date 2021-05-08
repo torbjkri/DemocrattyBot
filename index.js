@@ -1,46 +1,44 @@
-const Discord = require('discord.js');
+const {CommandoClient}= require('discord.js-commando');
+const { Structures } = require('discord.js');
+const path = require('path');
 const {
     prefix,
     token,
+    owners,
 } = require('./config.json');
-const { executionAsyncResource } = require('async_hooks');
-const { SSL_OP_TLS_BLOCK_PADDING_BUG } = require('constants');
 
-const player = require('/home/tkringel/git/personal/DemocrattyBot/libs/player.js');
+Structures.extend('Guild', Guild => {
+    class MusicGuild extends Guild {
+        constructor(client, data) {
+            super(client, data);
+            this.musicData = {
+                queue: [],
+                isPlaying: false,
+                volume: 1,
+                songDispatcher: null
+            }
+        }
+    }
+     return MusicGuild;
+});
 
-const client = new Discord.Client();
+const client = new CommandoClient({
+    commandPrefix: '!',
+    owner: owners
+});
+
+client.registry
+    .registerDefaults()
+    .registerGroups([
+        ['youtube', 'Music Player']
+    ])
+    .registerCommandsIn(path.join(__dirname, 'commands'));
+
 client.login(token);
 
+
 client.once('ready', () => {
-    console.log('Ready!');
-})
-
-client.once('reconnecting', () => {
-    console.log('Reconecting!');
-})
-client.once('disconnect', () => {
-    console.log('Disconnect!');
-})
-
-
-client.on('message', async message => {
-    if (message.author.bot) return;
-    if (!message.content.startsWith(prefix)) return;
-
-    if (message.content.startsWith(`${prefix}play`)) {
-        player.execute(message);
-        return;
-    } else if (message.content.startsWith(`${prefix}skip`)) {
-        player.skip(message);
-    } else if (message.content.startsWith(`${prefix}stop`)) {
-        player.stop(message);
-        return;
-    } else if (message.content.startsWith(`${prefix}list`)) {
-        player.list(message);
-    } else if (message.content.startsWith(`${prefix}vote`)) {
-        player.addVote(message);
-    } else {
-        message.channel.send("You need to enter a valid command!");
-    }
+    console.log(`Logged in as ${client.user.tag}! (${client.user.id})`);
+    client.user.setActivity('i Rassen');
 });
 

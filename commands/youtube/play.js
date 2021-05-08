@@ -183,3 +183,5 @@ module.exports = class PlayCommand extends Command {
         }
     }
 }
+
+https://dev.to/galnir/how-to-write-a-music-command-using-the-discord-js-library-462f

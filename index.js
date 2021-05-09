@@ -7,6 +7,8 @@ const {
     owners,
 } = require('./config.json');
 
+Object.keys(CommandoClient).forEach((prop) => console.log(prop));
+
 Structures.extend('Guild', Guild => {
     class MusicGuild extends Guild {
         constructor(client, data) {

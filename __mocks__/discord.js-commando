@@ -1,0 +1,7 @@
+// __mocks/discord.js-commando.js
+// Mock for discord js commando thing
+
+
+const discord = jest.createMockFromModule('discord.js-commando');
+
+module.exports = discord;

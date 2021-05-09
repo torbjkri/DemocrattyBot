@@ -4,7 +4,6 @@
   "description": "A small attempt at creating a music bot for discord, or at least learn some things about JavaScript and creating bots. The name comes for the initial drive for creating this bot, if it ever comes that far it will be apparent.",
   "main": "index.js",
   "dependencies": {
-    "chai": "^4.3.4",
     "discord.js": "^12.5.3",
     "discord.js-commando": "^0.12.3",
     "ffmpeg": "^0.0.4",

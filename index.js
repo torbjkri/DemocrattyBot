@@ -14,6 +14,7 @@ Structures.extend('Guild', Guild => {
         constructor(client, data) {
             super(client, data);
             this.musicData = {
+                currentlyPlaying: null,
                 queue: [],
                 isPlaying: false,
                 volume: 1,

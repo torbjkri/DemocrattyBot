@@ -5,6 +5,17 @@ const ytdl = require('ytdl-core');
 const { youtubeAPI } = require('../../config.json');
 const youtube = new YouTube(youtubeAPI);
 
+class Song {
+    constructor(url, title, duration, thumbnail, voiceChannel) {
+        this.url = url;
+        this.title = title;
+        this.duration = duration;
+        this.thumbnail = thumbnail;
+        this.voiceChannel = voiceChannel;
+        this.votes = 0;
+    }
+}
+
 module.exports = class PlayCommand extends Command {
     constructor(client) {
         super(client, {
@@ -49,13 +60,8 @@ module.exports = class PlayCommand extends Command {
                     let duration = this.formatDuration(video.duration);
                     const thumbnail = video.thumbnails.high.url;
                     if (duration == '00:00') duration = 'Live Stream';
-                    const song = {
-                        url,
-                        title,
-                        duration,
-                        thumbnail,
-                        voiceChannel
-                    };
+
+                    const song = new Song(url, title, duration, thumbnail, voiceChannel);
 
                     message.guild.musicData.queue.push(song);
                 }
@@ -84,13 +90,8 @@ module.exports = class PlayCommand extends Command {
                 let duration = this.formatDuration(video.duration);
                 const thumbnail = video.thumbnails.high.url;
                 if (duration == '00:00') duration = "Live Stream";
-                const song = {
-                    url,
-                    title,
-                    duration,
-                    thumbnail,
-                    voiceChannel
-                };
+                const song = new Song(url, title, duration, thumbnail, voiceChannel);
+
                 message.guild.musicData.queue.push(song);
                 if (message.guild.musicData.isPlaying == false || typeof message.guild.musicData.isPlaying == 'undefine') {
                     message.guild.musicData.isPlaying = true;
@@ -158,13 +159,7 @@ module.exports = class PlayCommand extends Command {
             let duration = this.formatDuration(video.duration);
             const thumbnail = video.thumbnails.high.url;
             if (duration == '00:00') duration = 'Live Stream';
-            const song = {
-                url,
-                title,
-                duration,
-                thumbnail,
-                voiceChannel
-            };
+            const song = new Song(url, title, duration, thumbnail, voiceChannel);
 
             message.guild.musicData.queue.push(song);
             if (message.guild.musicData.isPlaying === false) {

@@ -12,7 +12,9 @@
     "mocha": "^8.4.0",
     "mock-discordjs": "^0.2.0",
     "node-opus": "^0.3.3",
+    "opusscript": "^0.0.8",
     "simple-youtube-api": "^5.2.1",
+    "update": "^0.7.4",
     "ytdl-core": "^4.7.0"
   },
   "devDependencies": {

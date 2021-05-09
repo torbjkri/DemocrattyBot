@@ -104,7 +104,7 @@ module.exports = class PlayCommand extends Command {
             }
         }
         try {
-            const videos = await.youtube.searchVideos(query, 5);
+            const videos = await youtube.searchVideos(query, 5);
             if (videos.length < 5) {
                 return message.say(
                     `I had some trouble finding what you were looking for, please try a better search`
@@ -128,7 +128,7 @@ module.exports = class PlayCommand extends Command {
 
             try {
                 var response =  await message.channel.awaitMessages(
-                    msg => (msg.content > 0 && msg.content < 6 || msg.content === 'exit') {
+                    msg => (msg.content > 0 && msg.content < 6) || msg.content === 'exit', {
                         max: 1,
                         maxProcessed: 1,
                         time: 60000,
@@ -182,6 +182,64 @@ module.exports = class PlayCommand extends Command {
             );
         }
     }
-}
 
-https://dev.to/galnir/how-to-write-a-music-command-using-the-discord-js-library-462f
+    playSong(queue, message) {
+        let voiceChannel;
+        queue[0].voiceChannel
+            .join()
+            .then(connection => {
+                const dispatcher = connection
+                    .play(
+                        ytdl(queue[0].url, {
+                            quality: 'highestaudio',
+                            highWaterMark: 1024 * 1024 * 10
+                        })
+                    )
+                    .on('start', () => {
+                        message.guild.musicData.songDispatcher =  dispatcher;
+                        dispatcher.setVolume(message.guild.musicData.volume);
+                        voiceChannel = queue[0].voiceChannel;
+                        const videoEmbed = new MessageEmbed()
+                            .setThumbnail(queue[0].thumbnail)
+                            .setColor('#e9f931')
+                            .addField('Now playing:', queue[0].title)
+                            .addField('Duration:', queue[0].duration);
+                        message.say(videoEmbed);
+                        return queue.shift();
+                    })
+                    .on('finish', () => {
+                        if (queue.length > 1) {
+                            return this.playSong(queue, message);
+                        } else {
+                            message.guild.musicData.isPlaying = false;
+                            return voiceChannel.leave();
+                        }
+                    })
+                    .on('error', e => {
+                        message.say('Cannot play song');
+                        message.guild.musicData.isPlaying = false;
+                        message.guild.musicData.queue.length = 0;
+                        console.error(e);
+                        message.guild.musicData.nowPlaying = null;
+                    })
+            })
+            .catch(err => {
+                console.error(err);
+                return voiceChannel.leave();
+            });
+    }
+
+    formatDuration(durationObj) {
+        const duration = `${durationObj.hours ? durationObj.hours + ':' : ''}${
+            durationObj.minutes ? durationObj.minutes : '00'
+        }:${
+            durationObj.seconds < 10
+            ? '0' + durationObj.seconds
+            : durationObj.seconds
+            ? durationObj.seconds
+            : '00'
+        }`
+        return duration;
+    }
+
+}

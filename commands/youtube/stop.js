@@ -9,7 +9,7 @@ module.exports = class StopCommand extends Command {
             memberName: 'stop',
             description: 'Admin command: stops music player',
             ownerOnly: true,
-            this.clientPermissions: ['SPEAK', 'CONNECT'],
+            clientPermissions: ['SPEAK', 'CONNECT'],
         });
     }
 

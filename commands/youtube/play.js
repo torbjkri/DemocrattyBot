@@ -178,7 +178,38 @@ module.exports = class PlayCommand extends Command {
         }
     }
 
-    playSong(queue, message) {
+    playSong(song, message) {
+
+        let voiceChannel = song.voiceChannel;
+        let musicData = message.guild.musicData;
+        voiceChannel.join()
+            .then(connection => {
+                const dispatcher = connection
+                      .play()
+                      .ytdl(song.url, {
+                          quality: 'highestaudio',
+                          highWaterMark: 1024 * 1024 * 10
+                      })
+                      .on('start', () => {
+                          musicData.songDispatcher = dispatcher;
+                          dispatcher.setVolume(musicData.volume);
+                          const videoEmbed = new MessageEmbed()
+                                .setThumbnail(queue[0].thumbnail)
+                                .setColor('#e9f931')
+                                .addField('Now playing:', queue[0].title)
+                                .addField('Duration:', queue[0].duration);
+                          return message.say(videoEmbed);
+                      })
+                      .on('finish', () => {
+                          if (musicData.queue.length > 0) {
+                              musicData.currentPlaying = musicData.queue.shift();
+                              return this.playSong(musicData.currentPlaying, message);
+                          }
+                      })
+            })
+            .catch(err => {
+            });
+
         let voiceChannel;
         queue[0].voiceChannel
             .join()

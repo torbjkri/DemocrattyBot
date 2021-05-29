@@ -50,7 +50,14 @@ module.exports = class PlayCommand extends Command {
         }
         if (query.match( /^(?!.*\?.*\bv=)https:\/\/www\.youtube\.com\/.*\?.*\blist=.*$/ )) {
             try {
-                const playlist = await youtube.getPlaylist(query);
+                let playlist;
+                youtube.getPlaylist(query)
+                    .then(pl => {playlist = pl;})
+                    .catch(err => {
+                          console.error(err);
+                           return message.say("Playlist is either private or does not exist");
+                    }
+                );
                 const videosObj =  await playlist.getVideos();
 
                 for (let i = 0; i < videosObj.length; i++) {
@@ -63,12 +70,13 @@ module.exports = class PlayCommand extends Command {
 
                     const song = new Song(url, title, duration, thumbnail, voiceChannel);
 
-                    message.guild.musicData.queue.push(song);
                 }
                 if (message.guild.musicData.isPlaying == false) {
                     message.guild.musicData.isPlaying = true;
-                    return this.playSong(message.guild.musicData.queue,message);
+                    message.guild.musicData.currentPlaying = song;
+                    return this.playSong(message.guild.musicData.currentPlaying,message);
                 } else if (message.guild.musicData.isPlaying) {
+                    message.guild.musicData.queue.push(song);
                     return message.say(
                         `Playlist - :musical_note: ${playlist.title} :musical_note: has been added to queue!`
                     );
@@ -95,7 +103,8 @@ module.exports = class PlayCommand extends Command {
                 message.guild.musicData.queue.push(song);
                 if (message.guild.musicData.isPlaying == false || typeof message.guild.musicData.isPlaying == 'undefine') {
                     message.guild.musicData.isPlaying = true;
-                    return this.playSong(message.guild.musicData.queue, message);
+                    message.guild.musicData.currentPlaying = song;
+                    return this.playSong(message.guild.musicData.currenPlaying, message);
                 } else if (message.guild.musicData.isPlaying) {
                     return message.say(`${song.title} added to queue`);
                 }
@@ -104,28 +113,37 @@ module.exports = class PlayCommand extends Command {
                 return message.say('Something went wrong, please try again');
             }
         }
+        let videos;
+        youtube.searchVideos(query, 5)
+            .then(result => {
+                message.say(result.length);
+                videos = result;
+            })
+            .catch(error => {
+                console.error(error);
+                return message.say("Something went wrong while quering for videos");
+            });
+        if (videos.length < 5) {
+            return message.say(
+                `I had some trouble finding what you were looking for, please try a better search`
+            );
+        }
+        const vidNameArr = [];
+        for (let i = 0; i < videos.length; i++) {
+            vidNameArr.push(`${i + 1}: ${videos[i].title}`);
+        }
+        vidNameArr.push('exit');
+        const embed = new MessageEmbed()
+              .setColor(`#e9f931`)
+              .setTitle('Choose a song by commenting a number between 1 and 5')
+              .addField('Song 1', vidNameArr[0])
+              .addField('Song 2', vidNameArr[1])
+              .addField('Song 3', vidNameArr[2])
+              .addField('Song 4', vidNameArr[3])
+              .addField('Song 5', vidNameArr[4])
+              .addField('Exit', 'exit');
+        var songEmbed = message.say({ embed });
         try {
-            const videos = await youtube.searchVideos(query, 5);
-            if (videos.length < 5) {
-                return message.say(
-                    `I had some trouble finding what you were looking for, please try a better search`
-                );
-            }
-            const vidNameArr = [];
-            for (let i = 0; i < videos.length; i++) {
-                vidNameArr.push(`${i + 1}: ${videos[i].title}`);
-            }
-            vidNameArr.push('exit');
-            const embed = new MessageEmbed()
-                .setColor(`#e9f931`)
-                .setTitle('Choose a song by commenting a number between 1 and 5')
-                .addField('Song 1', vidNameArr[0])
-                .addField('Song 2', vidNameArr[1])
-                .addField('Song 3', vidNameArr[2])
-                .addField('Song 4', vidNameArr[3])
-                .addField('Song 5', vidNameArr[4])
-                .addField('Exit', 'exit');
-            var songEmbed = await message.say({ embed });
 
             try {
                 var response =  await message.channel.awaitMessages(
@@ -144,7 +162,7 @@ module.exports = class PlayCommand extends Command {
                     'Please try again and enter a number between 1 and 5 or exit'
                 );
             }
-            if (response.first().contet === 'exit') return songEmbed.delte();
+            if (response.first().contet === 'exit') return songEmbed.delete();
             try {
                 var video = await youtube.getVideoByID(videos[videoIndex - 1].id);
             } catch (err) {
@@ -160,15 +178,18 @@ module.exports = class PlayCommand extends Command {
             const thumbnail = video.thumbnails.high.url;
             if (duration == '00:00') duration = 'Live Stream';
             const song = new Song(url, title, duration, thumbnail, voiceChannel);
+            songEmbed.delete();
 
             message.guild.musicData.queue.push(song);
             if (message.guild.musicData.isPlaying === false) {
                 message.guild.musicData.isPlaying = true;
-                songEmbed.delete();
+                message.guild.musicData.currentPlaying = song;
+                return playSong(message.guild.musicData.currentPlaying, message);
+            } else {
                 return message.say(`${song.title} added to queue`);
             }
         } catch (err) {
-            console.error(error);
+            console.error(err);
             if (songEmbed) {
                 songEmbed.delete();
             }
@@ -194,65 +215,35 @@ module.exports = class PlayCommand extends Command {
                           musicData.songDispatcher = dispatcher;
                           dispatcher.setVolume(musicData.volume);
                           const videoEmbed = new MessageEmbed()
-                                .setThumbnail(queue[0].thumbnail)
+                                .setThumbnail(song.thumbnail)
                                 .setColor('#e9f931')
-                                .addField('Now playing:', queue[0].title)
-                                .addField('Duration:', queue[0].duration);
+                                .addField('Now playing:', song.title)
+                                .addField('Duration:', song.duration);
                           return message.say(videoEmbed);
                       })
                       .on('finish', () => {
                           if (musicData.queue.length > 0) {
                               musicData.currentPlaying = musicData.queue.shift();
                               return this.playSong(musicData.currentPlaying, message);
+                          } else {
+                              message,guild.musicData.isPlaying = false;
+                              return voiceChannel.leave();
                           }
                       })
-            })
-            .catch(err => {
-            });
-
-        let voiceChannel;
-        queue[0].voiceChannel
-            .join()
-            .then(connection => {
-                const dispatcher = connection
-                    .play(
-                        ytdl(queue[0].url, {
-                            quality: 'highestaudio',
-                            highWaterMark: 1024 * 1024 * 10
-                        })
-                    )
-                    .on('start', () => {
-                        message.guild.musicData.songDispatcher =  dispatcher;
-                        dispatcher.setVolume(message.guild.musicData.volume);
-                        voiceChannel = queue[0].voiceChannel;
-                        const videoEmbed = new MessageEmbed()
-                            .setThumbnail(queue[0].thumbnail)
-                            .setColor('#e9f931')
-                            .addField('Now playing:', queue[0].title)
-                            .addField('Duration:', queue[0].duration);
-                        message.say(videoEmbed);
-                        return queue.shift();
-                    })
-                    .on('finish', () => {
-                        if (queue.length > 1) {
-                            return this.playSong(queue, message);
-                        } else {
-                            message.guild.musicData.isPlaying = false;
-                            return voiceChannel.leave();
-                        }
-                    })
-                    .on('error', e => {
-                        message.say('Cannot play song');
-                        message.guild.musicData.isPlaying = false;
-                        message.guild.musicData.queue.length = 0;
-                        console.error(e);
-                        message.guild.musicData.nowPlaying = null;
-                    })
+                      .on('error', e => {
+                          message.say('Cannot play song');
+                          message.guild.musicData.isPlaying = false;
+                          message.guild.musicData.queue.length = 0;
+                          console.error(e);
+                          message.guild.musicData.nowPlaying = null;
+                          return voiceChannel.leave();
+                      })
             })
             .catch(err => {
                 console.error(err);
                 return voiceChannel.leave();
             });
+
     }
 
     formatDuration(durationObj) {

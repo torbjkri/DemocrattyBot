@@ -1,7 +1,8 @@
 // test/command/youtube/list.js
-PlayCommand = require('../commands/youtube/list.js');
-var CommandoClient = require('discord.js-commando').CommandoClient;
-var Discord = require('discord.js');
+PlayCommand  = require('../commands/youtube/list.js');
+const { CommandoClient } = require('discord.js-commando');
+const Discord = require('discord.js');
+
 function messageConstruct() {
     message = {
         member: {
@@ -9,10 +10,10 @@ function messageConstruct() {
                 channel: false
             }
         },
-        reply: function (value) {
+        reply: function(value) {
             return Promise.resolve(value);
         },
-        say: function (value) {
+        say: function(value) {
             return Promise.resolve(value);
         },
         guild: {
@@ -20,24 +21,31 @@ function messageConstruct() {
                 songDispatcher: null
             }
         }
-    };
+
+    }
+
     return message;
 }
-beforeEach(function () {
+
+beforeEach(function() {
     message = messageConstruct();
-    command = new PlayCommand(new CommandoClient());
+
+    command =  new PlayCommand(new CommandoClient());
 });
-afterAll(function (done) {
+
+afterAll((done) => {
     done();
 });
-test("Fail on no valid voice channel", function () {
-    return command.run(message).then(function (data) {
+
+test("Fail on no valid voice channel", function() {
+    return command.run(message).then(data => {
         expect(data).toMatch("you need to be in the voice channel to interact with the bot.");
     });
 });
-test("Fail on no valid dispatcher", function () {
+
+test("Fail on no valid dispatcher", function() {
     message.member.voice.channel = true;
-    return command.run(message).then(function (data) {
+    return command.run(message).then(data => {
         expect(data).toMatch("There is currently no active playlist. !help to getting assistance in creating one.");
     });
 });

@@ -5,3 +5,10 @@
 # Dependency directories
 node_modules
 config.json
+
+
+# Added by cargo
+
+/target
+.env
+Cargo.lock

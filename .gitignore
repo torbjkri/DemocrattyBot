@@ -9,6 +9,7 @@ config.json
 
 # Added by cargo
 
+examples/*/target
 /target
 .env
 Cargo.lock

@@ -1,5 +1,2 @@
 {
-    "rust-analyzer.linkedProjects": [
-        ".\\examples\\01_serenity_setup\\Cargo.toml"
-    ]
 }

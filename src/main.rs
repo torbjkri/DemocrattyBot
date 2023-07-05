@@ -9,6 +9,7 @@
 mod error_handling;
 mod ping;
 mod play;
+mod queue;
 use std::env;
 use dotenv::dotenv;
 // This trait adds the `register_songbird` and `register_songbird_with` methods
@@ -41,6 +42,7 @@ impl EventHandler for Handler {
     }
 }
 
+
 use crate::ping::PING_COMMAND;
 use crate::play::PLAY_COMMAND;
 
@@ -70,6 +72,7 @@ async fn main() {
     let mut client = Client::builder(&token, intents)
         .event_handler(Handler)
         .framework(framework)
+        .type_map_insert::<queue::PinisReporter>(String::from("Pinis"))
         .register_songbird()
         .await
         .expect("Err creating client");

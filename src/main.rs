@@ -72,7 +72,7 @@ async fn main() {
     let mut client = Client::builder(&token, intents)
         .event_handler(Handler)
         .framework(framework)
-        .type_map_insert::<queue::PinisReporter>(String::from("Pinis"))
+        .type_map_insert::<queue::QueueManagerKey>(queue::QueueManager::default())
         .register_songbird()
         .await
         .expect("Err creating client");

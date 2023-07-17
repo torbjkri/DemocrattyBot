@@ -10,8 +10,9 @@ mod error_handling;
 mod ping;
 mod play;
 mod queue;
-use std::env;
 use dotenv::dotenv;
+use std::env;
+mod handlers;
 // This trait adds the `register_songbird` and `register_songbird_with` methods
 // to the client builder below, making it easy to install this voice client.
 // The voice client can be retrieved in any command using `songbird::get(ctx).await`.
@@ -21,13 +22,13 @@ use error_handling::check_msg;
 
 use serenity::{
     async_trait,
-    client::{Client, EventHandler, Context},
+    client::{Client, Context, EventHandler},
     framework::{
-        StandardFramework,
         standard::{
-            CommandResult,
             macros::{command, group},
+            CommandResult,
         },
+        StandardFramework,
     },
     model::{channel::Message, gateway::Ready},
     prelude::GatewayIntents,
@@ -42,7 +43,6 @@ impl EventHandler for Handler {
     }
 }
 
-
 use crate::ping::PING_COMMAND;
 use crate::play::PLAY_COMMAND;
 
@@ -54,14 +54,12 @@ struct General;
 async fn main() {
     dotenv().ok();
     tracing_subscriber::fmt::init();
-    
+
     // Configure the client with your Discord bot token in the environment.
-    let token = env::var("DISCORD_TOKEN")
-        .expect("Expected a token in the environment");
+    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     let framework = StandardFramework::new()
-        .configure(|c| c
-                   .prefix("/"))
+        .configure(|c| c.prefix("/"))
         .group(&GENERAL_GROUP);
 
     let intents = GatewayIntents::non_privileged()
@@ -78,9 +76,13 @@ async fn main() {
         .expect("Err creating client");
 
     tokio::spawn(async move {
-        let _ = client.start().await.map_err(|why| println!("Client ended: {:?}", why));
+        let _ = client
+            .start()
+            .await
+            .map_err(|why| println!("Client ended: {:?}", why));
     });
-    
+
+    println!("Initialization finished, awaiting exit");
     let _ = tokio::signal::ctrl_c().await;
     println!("Received Ctrl-C, shutting down.");
 }
@@ -92,7 +94,8 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
     let guild_id = guild.id;
 
     let channel_id = guild
-        .voice_states.get(&msg.author.id)
+        .voice_states
+        .get(&msg.author.id)
         .and_then(|voice_state| voice_state.channel_id);
 
     let connect_to = match channel_id {
@@ -104,10 +107,40 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
         }
     };
 
-    let manager = songbird::get(ctx).await
-        .expect("Songbird Voice client placed in at initialisation.").clone();
+    let manager = songbird::get(ctx)
+        .await
+        .expect("Songbird Voice client placed in at initialisation.")
+        .clone();
 
-    let _handler = manager.join(guild_id, connect_to).await;
+    manager.join(guild_id, connect_to).await.1.unwrap();
+    println!("Joined call");
+
+    // if let Some(call) = manager.get(guild_id) {
+    //     let mut handler = call.lock().await;
+
+    //     println!("Got handle");
+
+    //     handler.remove_all_global_events();
+
+    //     println!("Removed all events");
+
+    //     handler.add_global_event(
+    //         songbird::events::Event::Track(songbird::events::TrackEvent::End),
+    //         handlers::SongEndHandler {
+    //             context_data: ctx.data.clone(),
+    //         },
+    //     );
+
+    //     println!("Subscribed song end");
+
+    //     handler.add_global_event(
+    //         songbird::events::Event::Track(songbird::events::TrackEvent::Play),
+    //         handlers::SongStartHandler {
+    //         },
+    //     );
+
+    //     println!("Subscribed song start");
+    // }
 
     Ok(())
 }

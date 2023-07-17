@@ -21,7 +21,7 @@ impl Track {
 #[derive(Default)]
 pub struct QueueManager {
     pub current: Option<Track>,
-    pub next: Option<Track>
+    pub queue: Vec<Track>,
 }
 
 impl TypeMapKey for QueueManagerKey {

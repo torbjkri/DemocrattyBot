@@ -14,7 +14,7 @@ pub struct SongStartHandler {
 
 #[async_trait]
 impl EventHandler for SongEndHandler {
-    async fn act(&self, context: &EventContext<'_>) -> Option<Event> {
+    async fn act(&self, _context: &EventContext<'_>) -> Option<Event> {
         println!("Song ended wooop");
         None
     }
@@ -22,7 +22,7 @@ impl EventHandler for SongEndHandler {
 
 #[async_trait]
 impl EventHandler for SongStartHandler {
-    async fn act(&self, context: &EventContext<'_>) -> Option<Event> {
+    async fn act(&self, _context: &EventContext<'_>) -> Option<Event> {
         println!("Song Started wooop");
         None
     }

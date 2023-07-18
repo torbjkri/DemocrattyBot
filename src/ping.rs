@@ -1,12 +1,8 @@
 use serenity::{
     client:: Context,
     model::channel::Message,
-    framework::standard::{
-        CommandResult,
-    }
+    framework::standard::CommandResult
 };
-
-use crate::queue;
 
 use crate::command;
 

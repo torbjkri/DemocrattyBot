@@ -14,7 +14,7 @@ tracing-futures = "0.2"
 [dependencies.songbird]
 git = "https://github.com/serenity-rs/songbird"
 branch = "current"
-features = ["yt-dlp"]
+features = ["yt-dlp", "builtin-queue"]
 
 [dependencies.serenity]
 version = "0.11"

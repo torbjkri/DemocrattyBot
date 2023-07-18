@@ -115,32 +115,32 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
     manager.join(guild_id, connect_to).await.1.unwrap();
     println!("Joined call");
 
-    // if let Some(call) = manager.get(guild_id) {
-    //     let mut handler = call.lock().await;
+    if let Some(call) = manager.get(guild_id) {
+        let mut handler = call.lock().await;
 
-    //     println!("Got handle");
+        println!("Got handle");
 
-    //     handler.remove_all_global_events();
+        handler.remove_all_global_events();
 
-    //     println!("Removed all events");
+        println!("Removed all events");
 
-    //     handler.add_global_event(
-    //         songbird::events::Event::Track(songbird::events::TrackEvent::End),
-    //         handlers::SongEndHandler {
-    //             context_data: ctx.data.clone(),
-    //         },
-    //     );
+        handler.add_global_event(
+            songbird::events::Event::Track(songbird::events::TrackEvent::End),
+            handlers::SongEndHandler {
+                context_data: ctx.data.clone(),
+            },
+        );
 
-    //     println!("Subscribed song end");
+        println!("Subscribed song end");
 
-    //     handler.add_global_event(
-    //         songbird::events::Event::Track(songbird::events::TrackEvent::Play),
-    //         handlers::SongStartHandler {
-    //         },
-    //     );
+        handler.add_global_event(
+            songbird::events::Event::Track(songbird::events::TrackEvent::Play),
+            handlers::SongStartHandler {
+            },
+        );
 
-    //     println!("Subscribed song start");
-    // }
+        println!("Subscribed song start");
+    }
 
     Ok(())
 }

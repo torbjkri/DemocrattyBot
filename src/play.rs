@@ -27,7 +27,10 @@ async fn play_song(ctx: &Context, guild_id: GuildId, url: String) -> Result<(), 
             return Err(format!("Error sourcing ffmeg: {:?}", why));
         }
     };
-    call.play_source(source);
+    let handle = call.play_source(source);
+
+    let mut type_data = handle.typemap().write().await;
+    type_data.insert::<queue::Pinis>(4);
 
     Ok(())
 }

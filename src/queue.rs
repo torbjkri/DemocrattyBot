@@ -18,6 +18,12 @@ impl Track {
     }
 }
 
+pub struct Pinis;
+
+impl TypeMapKey for Pinis {
+    type Value = i32;
+}
+
 #[derive(Default)]
 pub struct QueueManager {
     pub current: Option<Track>,

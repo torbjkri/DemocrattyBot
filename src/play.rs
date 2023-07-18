@@ -1,9 +1,7 @@
 use serenity::{
     client::Context,
     framework::standard::{Args, CommandResult},
-    model::{
-        channel::Message,
-        prelude::GuildId},
+    model::{channel::Message, prelude::GuildId},
 };
 
 use crate::queue;
@@ -79,7 +77,7 @@ async fn no_song_playing(ctx: &Context) -> bool {
 
     match queue_data.current {
         Some(_) => return false,
-        None => return true
+        None => return true,
     };
 }
 
@@ -97,14 +95,19 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     add_song_to_queue(ctx, msg, &url).await;
 
     let Some(guild) = msg.guild(&ctx.cache) else {
-        return Err("Not a valid guild".to_string());
+        check_msg(msg.channel_id.say(&ctx.http, "Not a valid guild".to_owned()).await);
+        return Ok(());
     };
 
     if no_song_playing(ctx).await {
         match play_song(ctx, guild.id, url).await {
             Ok(_) => println!("Playing song"),
             Err(why) => {
-                check_msg(msg.channel_id.say(&ctx.http, format!("Error playing song: {:?}", why)).await);
+                check_msg(
+                    msg.channel_id
+                        .say(&ctx.http, format!("Error playing song: {:?}", why))
+                        .await,
+                );
             }
         }
     }
@@ -112,7 +115,6 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     println!("Finished play function");
     Ok(())
 }
-
 
 ////// TESTS ////////
 #[cfg(test)]

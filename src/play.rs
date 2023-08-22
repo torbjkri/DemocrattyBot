@@ -10,7 +10,7 @@ use crate::command;
 
 use crate::error_handling::check_msg;
 
-async fn play_song(ctx: &Context, guild_id: GuildId, url: String) -> Result<(), String> {
+async fn play_song(ctx: &Context, guild_id: GuildId, url: String, msg: &Message) -> Result<(), String> {
     let Some(manager) = songbird::get(ctx).await else {
         return Err("No songbird client available".to_string());
     };
@@ -27,10 +27,17 @@ async fn play_song(ctx: &Context, guild_id: GuildId, url: String) -> Result<(), 
             return Err(format!("Error sourcing ffmeg: {:?}", why));
         }
     };
-    let handle = call.play_source(source);
+    call.play_source(source);
 
-    let mut type_data = handle.typemap().write().await;
-    type_data.insert::<queue::Pinis>(4);
+    //let mut type_data = handle.typemap().write().await;
+
+    let mut data = ctx.data.write().await;
+    let Some(queue_data) = data.get_mut::<queue::QueueManagerKey>() else {
+        println!("No queue data available");
+        return Ok(());
+    };
+
+    queue_data.current = Some(queue::Track::new(msg.clone(), url.clone()));
 
     Ok(())
 }
@@ -103,7 +110,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     };
 
     if no_song_playing(ctx).await {
-        match play_song(ctx, guild.id, url).await {
+        match play_song(ctx, guild.id, url, msg).await {
             Ok(_) => println!("Playing song"),
             Err(why) => {
                 check_msg(
@@ -118,6 +125,10 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     println!("Finished play function");
     Ok(())
 }
+
+// create a next command that will play the next song in the queue
+
+
 
 ////// TESTS ////////
 #[cfg(test)]

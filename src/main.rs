@@ -10,6 +10,7 @@ mod error_handling;
 mod ping;
 mod play;
 mod queue;
+mod pause;
 use dotenv::dotenv;
 use std::env;
 mod handlers;
@@ -45,9 +46,11 @@ impl EventHandler for Handler {
 
 use crate::ping::PING_COMMAND;
 use crate::play::PLAY_COMMAND;
+use crate::pause::PAUSE_COMMAND;
 
 #[group]
-#[commands(join, play, ping)]
+#[commands(join, play, ping, pause)]
+
 struct General;
 
 #[tokio::main]

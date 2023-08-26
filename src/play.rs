@@ -27,8 +27,6 @@ async fn play_song(ctx: &Context, guild_id: GuildId, url: String, msg: &Message)
             return Err(format!("Error sourcing ffmeg: {:?}", why));
         }
     };
-    call.play_source(source);
-
     //let mut type_data = handle.typemap().write().await;
 
     let mut data = ctx.data.write().await;
@@ -37,7 +35,7 @@ async fn play_song(ctx: &Context, guild_id: GuildId, url: String, msg: &Message)
         return Ok(());
     };
 
-    queue_data.current = Some(queue::Track::new(msg.clone(), url.clone()));
+    queue_data.current = Some(call.play_source(source));
 
     Ok(())
 }

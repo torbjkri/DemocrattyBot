@@ -1,5 +1,6 @@
 use songbird::typemap::TypeMapKey;
 use serenity::model::channel::Message;
+use songbird::tracks::TrackHandle;
 
 pub struct QueueManagerKey;
 
@@ -26,7 +27,7 @@ impl TypeMapKey for Pinis {
 
 #[derive(Default)]
 pub struct QueueManager {
-    pub current: Option<Track>,
+    pub current: Option<TrackHandle>,
     pub queue: Vec<Track>,
 }
 

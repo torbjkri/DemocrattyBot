@@ -47,9 +47,10 @@ impl EventHandler for Handler {
 use crate::ping::PING_COMMAND;
 use crate::play::PLAY_COMMAND;
 use crate::pause::PAUSE_COMMAND;
+use crate::pause::RESUME_COMMAND;
 
 #[group]
-#[commands(join, play, ping, pause)]
+#[commands(join, play, ping, pause, resume)]
 
 struct General;
 

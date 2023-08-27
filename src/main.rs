@@ -48,9 +48,10 @@ use crate::ping::PING_COMMAND;
 use crate::play::PLAY_COMMAND;
 use crate::pause::PAUSE_COMMAND;
 use crate::pause::RESUME_COMMAND;
+use crate::play::NEXT_COMMAND;
 
 #[group]
-#[commands(join, play, ping, pause, resume)]
+#[commands(join, play, ping, pause, resume, next)]
 
 struct General;
 

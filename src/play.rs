@@ -10,12 +10,16 @@ use crate::command;
 
 use crate::error_handling::check_msg;
 
-async fn play_song(ctx: &Context, guild_id: GuildId, url: String, msg: &Message) -> Result<(), String> {
+async fn play_song(ctx: &Context, url: String, msg: &Message) -> Result<(), String> {
+    let Some(guild) = msg.guild(&ctx.cache) else {
+        return Err("Not a valid guild".to_string());
+    };
+
     let Some(manager) = songbird::get(ctx).await else {
         return Err("No songbird client available".to_string());
     };
 
-    let Some(call_guard) = manager.get(guild_id) else {
+    let Some(call_guard) = manager.get(guild.id) else {
         return Err("Not in a voice channel to play in".to_string());
     };
 
@@ -38,6 +42,48 @@ async fn play_song(ctx: &Context, guild_id: GuildId, url: String, msg: &Message)
     queue_data.current = Some(call.play_source(source));
 
     Ok(())
+}
+
+async fn stop_current_song(ctx: &Context) -> () {
+    let mut data = ctx.data.write().await;
+    let Some(queue_data) = data.get_mut::<queue::QueueManagerKey>() else {
+        println!("No queue data available");
+        return;
+    };
+
+    if let Some(handle) = &mut queue_data.current {
+        match handle.stop() {
+            Ok(_) => println!("Stopped current song"),
+            Err(why) => return println!("Error stopping song: {}", why),
+        }
+    }
+}
+
+async fn get_next_track(ctx: &Context) -> Option<queue::Track> {
+    let mut data = ctx.data.write().await;
+    let Some(queue_data) = data.get_mut::<queue::QueueManagerKey>() else {
+        println!("No queue data available");
+        return None;
+    };
+
+    queue_data.queue.pop_front()
+}
+
+async fn play_next_song(ctx: &Context) -> () {
+    if let Some(next_track) = get_next_track(ctx).await {
+        match play_song(ctx, next_track.url, &next_track.msg).await {
+            Ok(_) => println!("Playing song"),
+            Err(why) => {
+                check_msg(
+                    next_track
+                        .msg
+                        .channel_id
+                        .say(&ctx.http, format!("Error playing song: {:?}", why))
+                        .await,
+                );
+            }
+        }
+    }
 }
 
 fn is_valid_url(url: &String) -> Result<(), String> {
@@ -73,7 +119,7 @@ async fn add_song_to_queue(ctx: &Context, msg: &Message, url: &String) {
     };
 
     let track = queue::Track::new(msg.clone(), url.clone());
-    queue_data.queue.push(track);
+    queue_data.queue.push_back(track);
 }
 
 async fn no_song_playing(ctx: &Context) -> bool {
@@ -102,31 +148,24 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
     add_song_to_queue(ctx, msg, &url).await;
 
-    let Some(guild) = msg.guild(&ctx.cache) else {
-        check_msg(msg.channel_id.say(&ctx.http, "Not a valid guild".to_owned()).await);
-        return Ok(());
-    };
-
     if no_song_playing(ctx).await {
-        match play_song(ctx, guild.id, url, msg).await {
-            Ok(_) => println!("Playing song"),
-            Err(why) => {
-                check_msg(
-                    msg.channel_id
-                        .say(&ctx.http, format!("Error playing song: {:?}", why))
-                        .await,
-                );
-            }
-        }
+        play_next_song(ctx).await;
     }
 
     println!("Finished play function");
     Ok(())
 }
 
+#[command]
+#[only_in(guilds)]
+async fn next(ctx: &Context, _msg: &Message, mut _args: Args) -> CommandResult {
+    stop_current_song(ctx).await;
+    play_next_song(ctx).await;
+    println!("Finished play next");
+    Ok(())
+}
+
 // create a next command that will play the next song in the queue
-
-
 
 ////// TESTS ////////
 #[cfg(test)]

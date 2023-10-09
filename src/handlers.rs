@@ -20,11 +20,10 @@ impl EventHandler for SongEndHandler {
         println!("Song ended wooop");
 
         match context {
-            EventContext::Track(&[track]) => {
-                let handle = track.1;
-                let type_lock = handle.typemap().read().await;
-                if let Some(val) = type_lock.get::<queue::Pinis>() {
-                    println!("We found: {:?}", val);
+            EventContext::Track(&[_track]) => {
+                let type_lock = self.context_data.write().await;
+                if let Some(queue_manager) = type_lock.get::<queue::QueueManagerKey>() {
+                    println!("There are {} elements in queue", queue_manager.queue.len());
                 } else {
                     println!("Didnt find any type map");
                 }

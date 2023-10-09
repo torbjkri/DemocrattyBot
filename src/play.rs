@@ -1,7 +1,7 @@
 use serenity::{
     client::Context,
     framework::standard::{Args, CommandResult},
-    model::{channel::Message, prelude::GuildId},
+    model::channel::Message,
 };
 
 use crate::queue;
